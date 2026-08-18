@@ -1,0 +1,19 @@
+---
+import type { Game } from '../types/game';
+import GameCard from './GameCard.astro';
+import EmptyState from './EmptyState.astro';
+
+interface Props {
+    games: Game[];
+}
+
+const { games } = Astro.props;
+---
+
+{games.length === 0 ? (
+    <EmptyState text="No games available at the moment." />
+) : (
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" data-testid="games-grid">
+        {games.map((game) => <GameCard game={game} />)}
+    </div>
+)}

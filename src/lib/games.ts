@@ -1,4 +1,4 @@
-import { eq, asc } from 'drizzle-orm';
+import { eq, asc, count } from 'drizzle-orm';
 import type { Database } from './db';
 import { games, categories, publishers } from '../../db/schema';
 import type { Game } from '../types/game';
@@ -50,9 +50,41 @@ function baseGamesQuery(db: Database) {
         .leftJoin(publishers, eq(games.publisherId, publishers.id));
 }
 
+/** Default number of games shown per page on the paginated game listing. */
+export const GAMES_PER_PAGE = 6;
+
 /** All games ordered by title. */
 export async function getAllGames(db: Database): Promise<Game[]> {
     const rows = await baseGamesQuery(db).orderBy(asc(games.title));
+    return rows.map(mapGame);
+}
+
+/** Total number of games in the catalog. */
+export async function getGamesCount(db: Database): Promise<number> {
+    const [row] = await db.select({ count: count() }).from(games);
+    return row?.count ?? 0;
+}
+
+/** Total number of pages needed to list all games at the given page size. */
+export async function getGamesPageCount(db: Database, pageSize: number = GAMES_PER_PAGE): Promise<number> {
+    const total = await getGamesCount(db);
+    return Math.max(1, Math.ceil(total / pageSize));
+}
+
+/**
+ * A single page of games ordered by title, using 1-based page numbers.
+ * Pages beyond the last available page return an empty array.
+ */
+export async function getGamesPage(
+    db: Database,
+    page: number,
+    pageSize: number = GAMES_PER_PAGE,
+): Promise<Game[]> {
+    const safePage = Math.max(1, page);
+    const rows = await baseGamesQuery(db)
+        .orderBy(asc(games.title))
+        .limit(pageSize)
+        .offset((safePage - 1) * pageSize);
     return rows.map(mapGame);
 }
 

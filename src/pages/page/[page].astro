@@ -1,0 +1,45 @@
+---
+import type { GetStaticPaths } from 'astro';
+import Layout from '../../layouts/Layout.astro';
+import PageHero from '../../components/PageHero.astro';
+import GamesGrid from '../../components/GamesGrid.astro';
+import Pagination from '../../components/Pagination.astro';
+import { getDatabase } from '../../lib/db';
+import { getGamesPage, getGamesPageCount } from '../../lib/games';
+
+export const prerender = true;
+
+export const getStaticPaths = (async () => {
+    const db = getDatabase();
+    const totalPages = await getGamesPageCount(db);
+    // Page 1 is served by the index page; only generate pages 2..N here.
+    const pages = [];
+    for (let page = 2; page <= totalPages; page++) {
+        pages.push({ params: { page: String(page) } });
+    }
+    return pages;
+}) satisfies GetStaticPaths;
+
+const { page } = Astro.params;
+const currentPage = Number(page);
+
+const db = getDatabase();
+const games = await getGamesPage(db, currentPage);
+const totalPages = await getGamesPageCount(db);
+---
+
+<Layout title={`Tailspin Toys - Page ${currentPage}`}>
+  <div class="py-8">
+    <PageHero
+      title="Welcome to Tailspin Toys"
+      subtitle="Find your next game! And maybe even back one! Explore our collection!"
+    />
+
+    <div>
+      <h2 class="text-2xl font-medium mb-6 text-slate-100">Featured Games</h2>
+
+      <GamesGrid games={games} />
+      <Pagination basePath="/" currentPage={currentPage} totalPages={totalPages} />
+    </div>
+  </div>
+</Layout>

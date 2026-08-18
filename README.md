@@ -12,6 +12,10 @@ Tailspin Toys is a crowdfunding platform for games with a developer theme. The p
 
 The database is migrated and seeded automatically before `dev`/`build` (via the `predev`/`prebuild` npm scripts) and is written to the gitignored `tailspin.db` file.
 
+## Accessibility
+
+The site follows WCAG 2.1 AA guidance (see `.github/instructions/ui.instructions.md`), including keyboard navigation, ARIA labeling, and visible focus states. Users can also enable a **high-contrast mode** via the toggle in the site header, which boosts text/background/border contrast beyond the default dark theme. The preference is stored in `localStorage` and applied on every page load, so it persists across reloads and navigation.
+
 ## Using this template
 
 This repository is a GitHub template. When you create a new repository from it, a one-time **Bootstrap template issues** workflow (`.github/workflows/bootstrap-issues.yml`) runs automatically on the first push to `main` and opens a set of starter issues describing suggested first features. Each issue is defined by a Markdown file in `.github/bootstrap-issues/` — the first heading becomes the issue title and the remaining content becomes the body — so you can edit, add, or remove files there to control which issues are created.
