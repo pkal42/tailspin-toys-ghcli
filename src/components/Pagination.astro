@@ -1,0 +1,75 @@
+---
+/**
+ * Previous/Next pagination controls for statically-generated list pages.
+ * Consumers provide the base path (e.g. `/games`) and the current/total
+ * page numbers; links use plain `<a>` tags so no client JS is required.
+ */
+interface Props {
+    /** Base path the paginated pages live under, e.g. `/games`. */
+    basePath: string;
+    /** Current 1-based page number. */
+    currentPage: number;
+    /** Total number of pages available. */
+    totalPages: number;
+}
+
+const { basePath, currentPage, totalPages } = Astro.props;
+
+/** Page 1 lives at `basePath`; subsequent pages live at `basePath/page/N`. */
+function pageHref(page: number): string {
+    if (page <= 1) return basePath === '' ? '/' : basePath;
+    const prefix = basePath === '/' ? '' : basePath;
+    return `${prefix}/page/${page}`;
+}
+
+const hasPrevious = currentPage > 1;
+const hasNext = currentPage < totalPages;
+---
+
+{totalPages > 1 && (
+    <nav
+        class="flex items-center justify-center gap-4 mt-10"
+        aria-label="Game listing pages"
+        data-testid="pagination"
+    >
+        {hasPrevious ? (
+            <a
+                href={pageHref(currentPage - 1)}
+                class="px-4 py-2 rounded-lg bg-slate-800 text-slate-100 border border-slate-700 hover:bg-slate-700 transition-colors duration-200 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                data-testid="pagination-previous"
+            >
+                Previous
+            </a>
+        ) : (
+            <span
+                class="px-4 py-2 rounded-lg bg-slate-900 text-slate-600 border border-slate-800 cursor-not-allowed"
+                aria-disabled="true"
+                data-testid="pagination-previous-disabled"
+            >
+                Previous
+            </span>
+        )}
+
+        <span class="text-slate-300 text-sm" data-testid="pagination-status">
+            Page {currentPage} of {totalPages}
+        </span>
+
+        {hasNext ? (
+            <a
+                href={pageHref(currentPage + 1)}
+                class="px-4 py-2 rounded-lg bg-slate-800 text-slate-100 border border-slate-700 hover:bg-slate-700 transition-colors duration-200 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                data-testid="pagination-next"
+            >
+                Next
+            </a>
+        ) : (
+            <span
+                class="px-4 py-2 rounded-lg bg-slate-900 text-slate-600 border border-slate-800 cursor-not-allowed"
+                aria-disabled="true"
+                data-testid="pagination-next-disabled"
+            >
+                Next
+            </span>
+        )}
+    </nav>
+)}

@@ -6,6 +6,9 @@ import {
     getAllGames,
     getAllGameIds,
     getGameById,
+    getGamesCount,
+    getGamesPage,
+    getGamesPageCount,
 } from './games';
 
 async function seedGames(db: Database, count: number): Promise<void> {
@@ -62,5 +65,57 @@ describe('games data-access helpers', () => {
     it('returns null for a non-existent game', async () => {
         await seedGames(db, 2);
         expect(await getGameById(db, 99999)).toBeNull();
+    });
+});
+
+describe('games pagination helpers', () => {
+    let db: Database;
+
+    beforeEach(async () => {
+        db = await createTestDatabase();
+    });
+
+    it('returns the total number of games', async () => {
+        await seedGames(db, 5);
+        expect(await getGamesCount(db)).toBe(5);
+    });
+
+    it('returns zero for an empty database', async () => {
+        expect(await getGamesCount(db)).toBe(0);
+    });
+
+    it('computes the number of pages needed for a given page size', async () => {
+        await seedGames(db, 5);
+        expect(await getGamesPageCount(db, 2)).toBe(3);
+        expect(await getGamesPageCount(db, 5)).toBe(1);
+        expect(await getGamesPageCount(db, 10)).toBe(1);
+    });
+
+    it('returns at least one page when the database is empty', async () => {
+        expect(await getGamesPageCount(db, 2)).toBe(1);
+    });
+
+    it('returns the requested page of games ordered by title', async () => {
+        await seedGames(db, 5);
+        const pageOne = await getGamesPage(db, 1, 2);
+        const pageTwo = await getGamesPage(db, 2, 2);
+        const pageThree = await getGamesPage(db, 3, 2);
+
+        expect(pageOne.map((g) => g.title)).toEqual(['Game 01', 'Game 02']);
+        expect(pageTwo.map((g) => g.title)).toEqual(['Game 03', 'Game 04']);
+        expect(pageThree.map((g) => g.title)).toEqual(['Game 05']);
+    });
+
+    it('returns an empty array for a page beyond the last page', async () => {
+        await seedGames(db, 2);
+        const page = await getGamesPage(db, 5, 2);
+        expect(page).toEqual([]);
+    });
+
+    it('defaults to GAMES_PER_PAGE when no page size is provided', async () => {
+        await seedGames(db, 3);
+        const page = await getGamesPage(db, 1);
+        const all = await getAllGames(db);
+        expect(page).toEqual(all);
     });
 });
